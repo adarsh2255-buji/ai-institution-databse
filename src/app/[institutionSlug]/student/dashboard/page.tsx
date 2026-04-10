@@ -35,7 +35,7 @@ export default async function StudentDashboard({ params }: Props) {
   if (!student.password_changed) redirect(`/register/${institutionSlug}/change-password`)
   if (!student.profile_completed) redirect(`/register/${institutionSlug}/setup-profile`)
 
-  const institution = student.institutions as { name: string; slug: string } | null
+  const institution = student.institutions as unknown as { name: string; slug: string } | null
 
   const infoItems = [
     { icon: '🏫', label: 'School', value: student.school_name },

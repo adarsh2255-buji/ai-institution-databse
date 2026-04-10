@@ -3,11 +3,11 @@ import { redirect } from 'next/navigation'
 import ChatUI from '@/components/chat/ChatUI'
 
 interface Props {
-  params: Promise<{ centerSlug: string }>
+  params: Promise<{ institutionSlug: string }>
 }
 
 export default async function ParentPage({ params }: Props) {
-  const { centerSlug } = await params
+  const { institutionSlug: centerSlug } = await params
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -45,7 +45,7 @@ export default async function ParentPage({ params }: Props) {
         <span>You can ask about <strong style={{ color: 'var(--accent-light)' }}>{childName}</strong>'s marks, attendance, and fees.</span>
       </div>
       <ChatUI
-        params={{ centerSlug }}
+        params={{ institutionSlug: centerSlug }}
         role="parent"
         centerName={center.name}
       />

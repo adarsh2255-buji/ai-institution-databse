@@ -2,6 +2,21 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
 import Link from 'next/link'
 
+interface StatCard {
+  icon: string
+  label: string
+  value: number | string
+  href: string
+  accent?: string
+}
+
+interface QuickAction {
+  icon: string
+  label: string
+  href: string
+  highlight?: boolean
+}
+
 interface Props {
   params: Promise<{ institutionSlug: string }>
 }
@@ -48,37 +63,37 @@ export default async function AdminDashboard({ params }: Props) {
   const base = `/${institutionSlug}/admin`
 
   // ── Role-based stat cards ──────────────────────────────────
-  const adminStats = [
+  const adminStats: StatCard[] = [
     { icon: '📨', label: 'Pending Requests', value: pendingRequests, href: `${base}/requests`, accent: pendingRequests > 0 ? 'var(--warning)' : undefined },
     { icon: '👤', label: 'Total Students',   value: totalStudents,   href: `${base}/students`  },
     { icon: '🏫', label: 'Active Batches',   value: totalBatches,    href: `${base}/batches`   },
     { icon: '💰', label: 'Pending Dues',     value: `₹${pendingFeeAmount.toLocaleString('en-IN')}`, href: `${base}/fees`, accent: pendingFeeAmount > 0 ? 'var(--danger)' : undefined },
   ]
 
-  const teacherStats = [
+  const teacherStats: StatCard[] = [
     { icon: '👤', label: 'Total Students', value: totalStudents, href: `${base}/students`   },
     { icon: '🏫', label: 'My Batches',     value: totalBatches,  href: `${base}/batches`    },
     { icon: '💬', label: 'AI Assistant',   value: 'Ask anything', href: `/${institutionSlug}/chat` },
   ]
 
-  const stats = ['owner', 'admin'].includes(role) ? adminStats : teacherStats
+  const stats: StatCard[] = ['owner', 'admin'].includes(role) ? adminStats : teacherStats
 
   // ── Role-based quick actions ───────────────────────────────
-  const adminQuickActions = [
+  const adminQuickActions: QuickAction[] = [
     { icon: '📨', label: 'Review Requests',  href: `${base}/requests`,   highlight: pendingRequests > 0 },
     { icon: '📅', label: 'Take Attendance',  href: `${base}/attendance`  },
     { icon: '💰', label: 'Collect Fee',      href: `${base}/fees`        },
     { icon: '🏆', label: 'Enter Marks',      href: `${base}/marks`       },
   ]
 
-  const teacherQuickActions = [
+  const teacherQuickActions: QuickAction[] = [
     { icon: '📅', label: 'Take Attendance',  href: `${base}/attendance` },
     { icon: '📝', label: 'Create Exam',      href: `${base}/exams`      },
     { icon: '🏆', label: 'Enter Marks',      href: `${base}/marks`      },
     { icon: '💬', label: 'AI Assistant',     href: `/${institutionSlug}/chat` },
   ]
 
-  const quickActions = ['owner', 'admin'].includes(role) ? adminQuickActions : teacherQuickActions
+  const quickActions: QuickAction[] = ['owner', 'admin'].includes(role) ? adminQuickActions : teacherQuickActions
 
   const roleLabel: Record<string, string> = {
     owner: 'Owner',

@@ -3,11 +3,11 @@ import { redirect } from 'next/navigation'
 import ChatUI from '@/components/chat/ChatUI'
 
 interface Props {
-  params: Promise<{ centerSlug: string }>
+  params: Promise<{ institutionSlug: string }>
 }
 
 export default async function ChatPage({ params }: Props) {
-  const { centerSlug } = await params
+  const { institutionSlug: centerSlug } = await params
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -27,7 +27,7 @@ export default async function ChatPage({ params }: Props) {
 
   return (
     <ChatUI
-      params={{ centerSlug }}
+      params={{ institutionSlug: centerSlug }}
       role={membership.role as 'admin' | 'teacher' | 'parent'}
       centerName={center.name}
     />
