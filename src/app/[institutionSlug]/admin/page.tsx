@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
 import Link from 'next/link'
+import StaffCheckInWidget from '@/components/attendance/StaffCheckInWidget'
 
 interface StatCard {
   icon: string
@@ -111,6 +112,10 @@ export default async function AdminDashboard({ params }: Props) {
         <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
           {roleLabel[role]} dashboard — here&apos;s a quick overview.
         </p>
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <StaffCheckInWidget />
       </div>
 
       {/* Stat grid */}

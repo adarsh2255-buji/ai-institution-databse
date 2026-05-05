@@ -21,7 +21,7 @@ export default function ChangePasswordPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
-        router.replace(`/register/${institutionSlug}/login`)
+        router.replace(`/${institutionSlug}/login`)
       } else {
         setChecking(false)
       }

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-type Role = 'owner' | 'admin' | 'teacher'
+type Role = 'owner' | 'admin' | 'teacher' | 'staff'
 
 interface Props {
   institutionSlug: string
@@ -27,6 +27,7 @@ const ROLE_BADGE: Record<Role, { label: string; cls: string }> = {
   owner:   { label: 'Owner',   cls: 'badge-accent' },
   admin:   { label: 'Admin',   cls: 'badge-info'   },
   teacher: { label: 'Teacher', cls: 'badge-success' },
+  staff:   { label: 'Staff',   cls: 'badge-warning' },
 }
 
 export default function AdminSidebar({
@@ -64,6 +65,12 @@ export default function AdminSidebar({
       href: `${base}/students`,
       icon: '👤',
       label: 'Students',
+      roles: ['owner', 'admin'],
+    },
+    {
+      href: `${base}/staff-attendance`,
+      icon: '⏱️',
+      label: 'Staff Attendance',
       roles: ['owner', 'admin'],
     },
 

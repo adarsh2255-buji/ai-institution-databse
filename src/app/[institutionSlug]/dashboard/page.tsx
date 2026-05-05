@@ -40,6 +40,7 @@ export default async function DashboardRouter({ params }: Props) {
       redirect(`/${institutionSlug}/owner/dashboard`)
     case 'admin':
     case 'teacher':
+    case 'staff':
       redirect(`/${institutionSlug}/admin`)
     case 'parent':
       redirect(`/${institutionSlug}/parent`)

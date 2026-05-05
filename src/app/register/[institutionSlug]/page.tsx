@@ -337,11 +337,11 @@ export default function StudentRegisterPage() {
             </div>
 
             <Link
-              href={`/register/${institutionSlug}/login`}
+              href={`/${institutionSlug}/login`}
               className="btn btn-primary"
               style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '12px' }}
             >
-              Go to Student Login →
+              Go to Login Portal →
             </Link>
           </div>
         )}

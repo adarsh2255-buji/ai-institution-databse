@@ -78,7 +78,7 @@ export default function SetupProfilePage() {
   // Guard: must be authenticated
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.replace(`/register/${institutionSlug}/login`); return }
+      if (!user) { router.replace(`/${institutionSlug}/login`); return }
       setUserId(user.id)
       setChecking(false)
       loadProfile()
@@ -88,7 +88,7 @@ export default function SetupProfilePage() {
   async function loadProfile() {
     try {
       const res = await fetch('/api/student/profile')
-      if (!res.ok) { router.replace(`/register/${institutionSlug}/login`); return }
+      if (!res.ok) { router.replace(`/${institutionSlug}/login`); return }
       const data: StudentProfile = await res.json()
       setProfile(data)
       // Pre-fill editable fields if they exist

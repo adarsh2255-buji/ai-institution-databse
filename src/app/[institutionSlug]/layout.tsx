@@ -17,7 +17,7 @@ export default async function InstitutionLayout({ children, params }: Props) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) return <>{children}</>
 
   // Check platform admin
   const { data: isPlatformAdmin } = await supabaseAdmin
@@ -35,15 +35,15 @@ export default async function InstitutionLayout({ children, params }: Props) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.status !== 'active') redirect('/login')
+  if (!userRecord || userRecord.status !== 'active') return <>{children}</>
 
   const rawInst = userRecord.institutions
   const institution = (Array.isArray(rawInst) ? rawInst[0] : rawInst) as {
     slug: string; status: string
   } | null
 
-  if (!institution || institution.status !== 'active') redirect('/login')
-  if (institution.slug !== institutionSlug) redirect('/login')
+  if (!institution || institution.status !== 'active') return <>{children}</>
+  if (institution.slug !== institutionSlug) return <>{children}</>
 
   return <>{children}</>
 }

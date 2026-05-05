@@ -3,23 +3,28 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 interface Institution { name: string; status: string }
 
-export default function StudentLoginPage() {
+export default function UnifiedLoginPage() {
   const { institutionSlug } = useParams<{ institutionSlug: string }>()
   const router = useRouter()
 
   const [institution, setInstitution] = useState<Institution | null>(null)
   const [pageReady, setPageReady] = useState(false)
-  const [registrationNo, setRegistrationNo] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    async function loadInstitution() {
+    async function init() {
+      // Clear any stale local auth sessions to prevent refresh token ghost errors
+      const supabase = createClient()
+      await supabase.auth.signOut()
+
       try {
         const res = await fetch(`/api/institution/public?slug=${institutionSlug}`)
         if (res.ok) setInstitution(await res.json())
@@ -27,19 +32,20 @@ export default function StudentLoginPage() {
         setPageReady(true)
       }
     }
-    loadInstitution()
+    init()
   }, [institutionSlug])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
+
     try {
-      const res = await fetch('/api/student/login', {
+      const res = await fetch('/api/institution/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          registrationNo: registrationNo.trim().toUpperCase(),
+          identifier: identifier.trim(),
           password,
           institutionSlug,
         }),
@@ -47,24 +53,30 @@ export default function StudentLoginPage() {
       const data = await res.json()
 
       if (!res.ok || !data.success) {
-        if (data.code === 'STUDENT_PENDING') {
-          setError('Your registration is pending admin approval. Please check back later.')
-        } else if (data.code === 'STUDENT_SUSPENDED') {
-          setError('Your account has been suspended. Contact the institution.')
+        if (data.code === 'STUDENT_PENDING' || data.code === 'INSTITUTION_PENDING') {
+          setError(data.error ?? 'Account pending approval.')
+        } else if (data.code === 'STUDENT_SUSPENDED' || data.code === 'INSTITUTION_SUSPENDED') {
+          setError(data.error ?? 'Account suspended.')
         } else {
           setError(data.error ?? 'Login failed. Check your credentials.')
         }
         return
       }
 
-      // Route to the correct next step based on completion flags
-      if (!data.passwordChanged) {
-        router.push(`/register/${institutionSlug}/change-password`)
-      } else if (!data.profileCompleted) {
-        router.push(`/register/${institutionSlug}/setup-profile`)
+      // Branch routing based on role
+      if (data.role === 'student') {
+        if (!data.passwordChanged) {
+          router.push(`/register/${institutionSlug}/change-password`)
+        } else if (!data.profileCompleted) {
+          router.push(`/register/${institutionSlug}/setup-profile`)
+        } else {
+          router.push(`/${institutionSlug}/student/dashboard`)
+        }
       } else {
-        router.push(`/${institutionSlug}/student/dashboard`)
+        // Staff routing (owner, admin, teacher)
+        router.push(`/${institutionSlug}/${data.role}/dashboard`)
       }
+
     } catch {
       setError('Network error. Please try again.')
     } finally {
@@ -95,15 +107,17 @@ export default function StudentLoginPage() {
         {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{
-            width: '52px', height: '52px', borderRadius: '50%',
-            background: 'var(--accent-dim)', border: '2px solid rgba(108,99,255,0.3)',
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'linear-gradient(135deg, var(--accent), var(--info))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '24px', margin: '0 auto 12px',
           }}>🎓</div>
-          <h1 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '4px' }}>Student Login</h1>
+          <h1 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px', marginBottom: '4px' }}>
+            EduAI Login
+          </h1>
           {institution && (
             <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-              {institution.name}
+              Portal for <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{institution.name}</span>
             </p>
           )}
         </div>
@@ -121,16 +135,18 @@ export default function StudentLoginPage() {
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div className="form-group">
-              <label className="form-label" htmlFor="registrationNo">Registration Number</label>
+              <label className="form-label" htmlFor="identifier">
+                Email or Registration Number
+              </label>
               <input
-                id="registrationNo"
+                id="identifier"
                 className="input"
-                placeholder="e.g. BRI01"
-                value={registrationNo}
-                onChange={(e) => { setRegistrationNo(e.target.value.toUpperCase()); setError('') }}
+                placeholder="you@email.com OR BRI01"
+                value={identifier}
+                onChange={(e) => { setIdentifier(e.target.value); setError('') }}
                 required
                 autoComplete="username"
-                style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.05em' }}
+                autoFocus
               />
             </div>
 
@@ -160,33 +176,30 @@ export default function StudentLoginPage() {
                   {showPassword ? '🙈' : '👁️'}
                 </button>
               </div>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Default: lowercase first name + last 2 digits of birth year (e.g. rahul05)
-              </span>
             </div>
 
             <button
-              id="student-login-submit"
+              id="unified-login-submit"
               type="submit"
               className="btn btn-primary"
               disabled={loading}
-              style={{ width: '100%', padding: '13px', fontSize: '15px', fontWeight: '600' }}
+              style={{ width: '100%', padding: '13px', fontSize: '15px', fontWeight: '600', marginTop: '4px' }}
             >
               {loading ? (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <span className="spinner" /> Logging in…
-                </span>
-              ) : 'Login →'}
+               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                 <span className="spinner" /> Signing in…
+               </span>
+              ) : 'Sign In →'}
             </button>
           </form>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-            <Link href={`/register/${institutionSlug}`} style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              ← New Registration
-            </Link>
-            <Link href="/login" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              Staff Login
-            </Link>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+            <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
+              Are you a new student?{' '}
+              <Link href={`/register/${institutionSlug}`} style={{ color: 'var(--accent)', fontWeight: '500' }}>
+                Register here
+              </Link>
+            </p>
           </div>
         </div>
       </div>

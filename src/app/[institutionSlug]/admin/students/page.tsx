@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 interface Student {
   id: string
@@ -26,6 +26,7 @@ const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }>
 
 export default function StudentsPage() {
   const { institutionSlug } = useParams<{ institutionSlug: string }>()
+  const router = useRouter()
 
   const [students, setStudents] = useState<Student[]>([])
   const [batches, setBatches] = useState<Batch[]>([])
@@ -258,6 +259,16 @@ export default function StudentsPage() {
                               style={{ fontSize: '11px', padding: '5px 10px', background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.2)' }}
                             >
                               {processingId === s.id ? <span className="spinner" /> : '🚫 Suspend'}
+                            </button>
+                          )}
+                          {s.status === 'active' && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => router.push(`/${institutionSlug}/admin/students/${s.id}`)}
+                              style={{ fontSize: '11px', padding: '5px 10px', color: '#6366f1', border: '1px solid rgba(99,102,241,0.25)', background: 'rgba(99,102,241,0.06)' }}
+                              title="View AI Analysis"
+                            >
+                              🧠 AI
                             </button>
                           )}
                         </div>

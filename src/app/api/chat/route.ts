@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai"
+import { createOpenAI } from "@ai-sdk/openai"
 import { streamText, convertToModelMessages } from "ai"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createAdmin } from "@supabase/supabase-js"
@@ -11,6 +11,12 @@ const supabaseAdmin = createAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
+// Use Gemini via its OpenAI-compatible endpoint (no extra package needed)
+const gemini = createOpenAI({
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+  apiKey: process.env.GEMINI_API_KEY ?? "",
+})
 
 const SYSTEM_PROMPT = `You are an intelligent academic assistant for an institution management system.
 You have access to real student data through tools. Always use tools to fetch accurate data — never guess or fabricate numbers.
@@ -78,7 +84,7 @@ export async function POST(req: NextRequest) {
     const modelMessages = await convertToModelMessages(messages)
 
     const result = streamText({
-      model: openai("gpt-4o"),
+      model: gemini("gemini-2.0-flash"),
       system: systemPrompt,
       messages: modelMessages,
       tools,
